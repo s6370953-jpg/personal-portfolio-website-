@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Portfolio Website Builder</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        accent: 'var(--accent-color)',
+                        'accent-glow': 'var(--accent-glow)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --accent-color: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.4);
+            --glass-blur: 12px;
+            --glass-bg: rgba(15, 23, 42, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #090d16;
+            color: #f1f5f9;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+            border: 1px solid var(--glass-border);
+        }
+
+        .accent-text { color: var(--accent-color); }
+        .accent-bg { background-color: var(--accent-color); }
+        .accent-border { border-color: var(--accent-color); }
+        .accent-shadow { box-shadow: 0 0 25px var(--accent-glow); }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-color); }
+
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.8; }
+        }
+        .animate-glow { animation: pulseGlow 4s infinite ease-in-out; }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { background: #0f172a !important; color: #ffffff !important; }
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden bg-[#090d16] text-slate-100">
+
+    <!-- Header Navbar -->
+    <header class="no-print h-16 border-b border-slate-800/80 bg-[#0b0f19]/90 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between shrink-0 z-30">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl accent-bg flex items-center justify-center text-white shadow-lg accent-shadow">
+                <i class="fa-solid font-bold text-xl fa-wand-magic-sparkles"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg text-white leading-tight flex items-center gap-2">
+                    Portfolio Builder
+                    <span class="text-xs px-2 py-0.5 rounded-full accent-bg text-white font-medium">Pro</span>
+                </h1>
+                <p class="text-xs text-slate-400 hidden sm:block">Craft & Download Your Professional Portfolio</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-2 sm:space-x-3">
+            <button onclick="savePortfolio()" id="savePortfolioBtn" class="px-3 py-2 text-xs sm:text-sm font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg border border-slate-700 transition-all flex items-center gap-1.5">
+                <i class="fa-solid fa-floppy-disk"></i>
+                <span>Save</span>
+            </button>
+            <span id="appStatus" role="status" aria-live="polite" class="hidden text-xs max-w-36 sm:max-w-52"></span>
+            <!-- Download Portfolio Button -->
+            <button onclick="downloadPortfolioHTML()" class="px-3.5 py-2 text-xs sm:text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-all shadow-md flex items-center gap-1.5">
+                <i class="fa-solid fa-download"></i>
+                <span class="hidden sm:inline">Download</span> HTML
+            </button>
+
+            <!-- Fullscreen Preview Toggle -->
+            <button onclick="toggleFullscreenPreview()" class="px-3 py-2 text-xs sm:text-sm font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg border border-slate-700 transition-all flex items-center gap-1.5">
+                <i class="fa-solid fa-expand text-slate-400"></i>
+                <span class="hidden sm:inline">Fullscreen</span>
+            </button>
+
+            <!-- Export Code Button -->
+            <button onclick="openExportModal()" class="px-3.5 py-2 text-xs sm:text-sm font-semibold accent-bg hover:opacity-90 text-white rounded-lg transition-all shadow-md flex items-center gap-1.5">
+                <i class="fa-solid fa-code"></i>
+                <span>Export Code</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Builder Layout -->
+    <div class="flex-1 flex overflow-hidden relative">
+        
+        <!-- Left Sidebar Form -->
+        <aside id="builderControls" class="w-full lg:w-[480px] xl:w-[520px] bg-[#0b0f19] border-r border-slate-800 flex flex-col h-full overflow-y-auto no-print z-20">
+            
+            <div class="p-4 border-b border-slate-800/80 sticky top-0 bg-[#0b0f19]/95 backdrop-blur-md z-10 flex gap-2 overflow-x-auto">
+                <button onclick="switchFormTab('personal')" id="tab-btn-personal" class="form-tab-btn active px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 bg-slate-800 text-white border border-slate-700 shrink-0">
+                    <i class="fa-solid fa-user text-xs"></i> Personal
+                </button>
+                <button onclick="switchFormTab('skills')" id="tab-btn-skills" class="form-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 text-slate-400 hover:bg-slate-800/50 shrink-0">
+                    <i class="fa-solid fa-code text-xs"></i> Skills
+                </button>
+                <button onclick="switchFormTab('projects')" id="tab-btn-projects" class="form-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 text-slate-400 hover:bg-slate-800/50 shrink-0">
+                    <i class="fa-solid fa-diagram-project text-xs"></i> Projects
+                </button>
+                <button onclick="switchFormTab('experience')" id="tab-btn-experience" class="form-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 text-slate-400 hover:bg-slate-800/50 shrink-0">
+                    <i class="fa-solid fa-briefcase text-xs"></i> Experience
+                </button>
+                <button onclick="switchFormTab('theme')" id="tab-btn-theme" class="form-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 text-slate-400 hover:bg-slate-800/50 shrink-0">
+                    <i class="fa-solid fa-palette text-xs"></i> Theme
+                </button>
+            </div>
+
+            <!-- Form Panels -->
+            <div class="p-5 space-y-6 flex-1">
+                <!-- Personal Info Tab -->
+                <div id="form-section-personal" class="form-section space-y-4">
+                    <h2 class="text-xs font-bold tracking-wider text-slate-400 uppercase">Personal Details</h2>
+                    <div class="space-y-2">
+                        <label class="text-xs font-semibold text-slate-300">Profile Photo</label>
+                        <div class="flex items-center gap-4">
+                            <img id="avatarPreview" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300" alt="Avatar" class="w-16 h-16 rounded-full object-cover border-2 border-slate-700 shrink-0">
+                            <div class="space-y-2 flex-1">
+                                <input type="text" id="photoUrlInput" oninput="updateProfilePhotoFromUrl(this.value)" placeholder="Image URL" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none">
+                                <label class="cursor-pointer inline-block px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-medium text-slate-300 transition-all">
+                                    <i class="fa-solid fa-upload mr-1"></i> Upload File
+                                    <input type="file" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs font-semibold text-slate-300 block mb-1">Full Name</label>
+                            <input type="text" id="fullNameInput" value="Alex Rivera" oninput="updateState()" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="text-xs font-semibold text-slate-300 block mb-1">Professional Title</label>
+                            <input type="text" id="jobTitleInput" value="Full Stack Developer" oninput="updateState()" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-xs font-semibold text-slate-300 block mb-1">About Me</label>
+                        <textarea id="bioInput" rows="3" oninput="updateState()" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-3 text-xs text-slate-200 focus:outline-none resize-none">I build performant web applications with elegant user experience and modern tech stacks.</textarea>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <input type="email" id="emailInput" value="alex@example.com" oninput="updateState()" placeholder="Email" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none">
+                        <input type="text" id="locationInput" value="San Francisco, CA" oninput="updateState()" placeholder="Location" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none">
+                        <input type="text" id="githubInput" value="https://github.com" oninput="updateState()" placeholder="GitHub URL" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none">
+                        <input type="text" id="linkedinInput" value="https://linkedin.com" oninput="updateState()" placeholder="LinkedIn URL" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none">
+                    </div>
+                </div>
+
+                <!-- Skills Tab -->
+                <div id="form-section-skills" class="form-section space-y-4 hidden">
+                    <div class="flex gap-2">
+                        <input type="text" id="newSkillInput" placeholder="Add Skill (e.g. React, Node.js)" onkeydown="if(event.key==='Enter'){addSkill(); event.preventDefault();}" class="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none">
+                        <button onclick="addSkill()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold">Add</button>
+                    </div>
+                    <div id="skillsBadgeContainer" class="flex flex-wrap gap-2 pt-2"></div>
+                </div>
+
+                <!-- Projects Tab -->
+                <div id="form-section-projects" class="form-section space-y-4 hidden">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-xs font-bold text-slate-400 uppercase">Projects</h2>
+                        <button onclick="addProject()" class="px-2.5 py-1 text-xs accent-bg text-white rounded-lg font-medium">+ Add</button>
+                    </div>
+                    <div id="projectsFormList" class="space-y-4"></div>
+                </div>
+
+                <!-- Experience Tab -->
+                <div id="form-section-experience" class="form-section space-y-4 hidden">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-xs font-bold text-slate-400 uppercase">Experience</h2>
+                        <button onclick="addExperience()" class="px-2.5 py-1 text-xs accent-bg text-white rounded-lg font-medium">+ Add</button>
+                    </div>
+                    <div id="experienceFormList" class="space-y-4"></div>
+                </div>
+
+                <!-- Theme Customization Tab -->
+                <div id="form-section-theme" class="form-section space-y-4 hidden">
+                    <label class="text-xs font-semibold text-slate-300 block">Accent Color</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="setAccentTheme('#3b82f6', 'rgba(59, 130, 246, 0.4)')" class="p-2 rounded-lg bg-slate-900 border border-slate-700 text-xs text-slate-200">Electric Blue</button>
+                        <button onclick="setAccentTheme('#8b5cf6', 'rgba(139, 92, 246, 0.4)')" class="p-2 rounded-lg bg-slate-900 border border-slate-700 text-xs text-slate-200">Neon Purple</button>
+                        <button onclick="setAccentTheme('#10b981', 'rgba(16, 185, 129, 0.4)')" class="p-2 rounded-lg bg-slate-900 border border-slate-700 text-xs text-slate-200">Emerald Green</button>
+                        <button onclick="setAccentTheme('#f43f5e', 'rgba(244, 63, 94, 0.4)')" class="p-2 rounded-lg bg-slate-900 border border-slate-700 text-xs text-slate-200">Rose Gold</button>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Right Side Live Portfolio Canvas -->
+        <main id="previewContainer" class="flex-1 h-full overflow-y-auto bg-[#070a12] relative p-4 sm:p-8 lg:p-12">
+            <div id="portfolioCanvas" class="max-w-4xl mx-auto space-y-10 relative z-10">
+                
+                <!-- Hero Section -->
+                <section class="glass-card rounded-3xl p-6 sm:p-10 shadow-2xl relative">
+                    <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+                        <img id="viewPhoto" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300" alt="Avatar" class="w-28 h-28 sm:w-36 sm:h-36 rounded-full object-cover border-2 border-slate-700 shadow-lg">
+                        <div class="flex-1 text-center sm:text-left space-y-3">
+                            <span id="viewTitleBadge" class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider accent-bg text-white inline-block">Full Stack Developer</span>
+                            <h1 id="viewFullName" class="text-3xl sm:text-5xl font-extrabold text-white">Alex Rivera</h1>
+                            <p class="text-xs sm:text-sm text-slate-400 flex items-center justify-center sm:justify-start gap-2">
+                                <i class="fa-solid fa-location-dot accent-text"></i> <span id="viewLocation">San Francisco, CA</span>
+                            </p>
+                            <p id="viewBio" class="text-sm text-slate-300 leading-relaxed">I build performant web applications with elegant user experience and modern tech stacks.</p>
+                            <div id="viewSocials" class="pt-2 flex flex-wrap items-center justify-center sm:justify-start gap-3"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Skills Section -->
+                <section class="space-y-4">
+                    <h2 class="text-xl font-bold text-white">Skills & Expertise</h2>
+                    <div id="viewSkills" class="glass-card rounded-2xl p-6 flex flex-wrap gap-2.5"></div>
+                </section>
+
+                <!-- Projects Section -->
+                <section class="space-y-4">
+                    <h2 class="text-xl font-bold text-white">Projects</h2>
+                    <div id="viewProjects" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+                </section>
+
+                <!-- Experience Section -->
+                <section class="space-y-4">
+                    <h2 class="text-xl font-bold text-white">Experience</h2>
+                    <div id="viewExperience" class="glass-card rounded-2xl p-6 space-y-6"></div>
+                </section>
+
+                <footer class="text-center py-6 text-xs text-slate-500">
+                    <p>© <span id="currentYear"></span> <span id="footerName">Alex Rivera</span>. All rights reserved.</p>
+                </footer>
+            </div>
+        </main>
+    </div>
+
+    <!-- Export Code Modal -->
+    <div id="exportModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="glass-card rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden border border-slate-700">
+            <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900">
+                <h3 class="font-bold text-white text-sm">Export HTML Source Code</h3>
+                <button onclick="closeExportModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-4 flex-1 overflow-hidden bg-[#060911]">
+                <textarea id="exportedCodeText" readonly class="w-full h-full font-mono text-xs text-slate-300 bg-transparent focus:outline-none resize-none"></textarea>
+            </div>
+            <div class="p-4 border-t border-slate-800 flex justify-end gap-2 bg-slate-900">
+                <button onclick="downloadPortfolioHTML()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium rounded-lg">Download HTML File</button>
+                <button onclick="copyExportedCode()" id="copyCodeBtn" class="px-4 py-2 accent-bg text-white text-xs font-medium rounded-lg">Copy Code</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JS Logic -->
+    <script>
+        let state = {
+            fullName: "Alex Rivera",
+            jobTitle: "Full Stack Developer",
+            bio: "I build performant web applications with elegant user experience and modern tech stacks.",
+            email: "alex@example.com",
+            location: "San Francisco, CA",
+            github: "https://github.com",
+            linkedin: "https://linkedin.com",
+            photoUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300",
+            skills: ["React", "TypeScript", "Node.js", "Tailwind CSS", "MongoDB"],
+            projects: [
+                { id: 1, title: "Portfolio Builder App", desc: "Interactive portfolio builder tool with live preview.", tags: "HTML, JS, Tailwind", liveUrl: "#", githubUrl: "#" }
+            ],
+            experience: [
+                { id: 1, role: "Full Stack Developer", org: "Tech Corp", period: "2023 - Present", highlights: "Building scalable web apps and cloud architectures." }
+            ],
+            theme: { accentColor: "#3b82f6", accentGlow: "rgba(59, 130, 246, 0.4)", blurPx: 12 }
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('currentYear').innerText = new Date().getFullYear();
+            renderAll();
+        });
+
+        function updateState() {
+            state.fullName = document.getElementById('fullNameInput').value || "Your Name";
+            state.jobTitle = document.getElementById('jobTitleInput').value || "Your Title";
+            state.bio = document.getElementById('bioInput').value || "";
+            state.email = document.getElementById('emailInput').value || "";
+            state.location = document.getElementById('locationInput').value || "";
+            state.github = document.getElementById('githubInput').value || "";
+            state.linkedin = document.getElementById('linkedinInput').value || "";
+            renderPreviewCanvas();
+        }
+
+        async function handleImageUpload(e) {
+            const input = e.target;
+            const file = input.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('photo', file);
+
+            try {
+                setAppStatus('Uploading photo...');
+                const response = await fetch('/api/upload', { method: 'POST', body: formData });
+                const result = await response.json();
+                if (!response.ok || !result.success || !result.imageUrl) {
+                    throw new Error(result.message || 'Photo upload failed.');
+                }
+
+                state.photoUrl = result.imageUrl;
+                document.getElementById('photoUrlInput').value = result.imageUrl;
+                document.getElementById('avatarPreview').src = state.photoUrl;
+                renderPreviewCanvas();
+                setAppStatus('Photo uploaded.');
+            } catch (error) {
+                setAppStatus(error.message || 'Photo upload failed.', true);
+            } finally {
+                input.value = '';
+            }
+        }
+
+        function updateProfilePhotoFromUrl(url) {
+            if (url) {
+                state.photoUrl = url.trim();
+                document.getElementById('avatarPreview').src = state.photoUrl;
+                renderPreviewCanvas();
+            }
+        }
+
+        function addSkill() {
+            const input = document.getElementById('newSkillInput');
+            if (input.value.trim()) {
+                state.skills.push(input.value.trim());
+                input.value = "";
+                renderSkillsForm();
+                renderPreviewCanvas();
+            }
+        }
+
+        function removeSkill(idx) {
+            state.skills.splice(idx, 1);
+            renderSkillsForm();
+            renderPreviewCanvas();
+        }
+
+        function renderSkillsForm() {
+            document.getElementById('skillsBadgeContainer').innerHTML = state.skills.map((s, idx) => `
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs bg-slate-800 text-slate-200 border border-slate-700">
+                    ${escapeHtml(s)} <button onclick="removeSkill(${idx})" class="ml-2 text-rose-400">×</button>
+                </span>
+            `).join('');
+        }
+
+        function addProject() {
+            state.projects.push({ id: Date.now(), title: "New Project", desc: "Project description.", tags: "Tech Stack", liveUrl: "", githubUrl: "" });
+            renderProjectsForm();
+            renderPreviewCanvas();
+        }
+
+        function removeProject(id) {
+            state.projects = state.projects.filter(p => p.id !== id);
+            renderProjectsForm();
+            renderPreviewCanvas();
+        }
+
+        function updateProjectData(id, field, value) {
+            const p = state.projects.find(p => p.id === id);
+            if (p) { p[field] = value; renderPreviewCanvas(); }
+        }
+
+        function renderProjectsForm() {
+            document.getElementById('projectsFormList').innerHTML = state.projects.map(p => `
+                <div class="p-3 bg-slate-900 border border-slate-800 rounded-xl space-y-2 relative">
+                    <button onclick="removeProject(${p.id})" class="absolute top-2 right-2 text-rose-400 text-xs"><i class="fa-solid fa-trash"></i></button>
+                    <input type="text" value="${escapeHtml(p.title)}" oninput="updateProjectData(${p.id}, 'title', this.value)" class="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-slate-200">
+                    <textarea oninput="updateProjectData(${p.id}, 'desc', this.value)" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-xs text-slate-200 resize-none">${escapeHtml(p.desc)}</textarea>
+                </div>
+            `).join('');
+        }
+
+        function addExperience() {
+            state.experience.push({ id: Date.now(), role: "Role Title", org: "Company", period: "2023 - Present", highlights: "Key achievements." });
+            renderExperienceForm();
+            renderPreviewCanvas();
+        }
+
+        function removeExperience(id) {
+            state.experience = state.experience.filter(e => e.id !== id);
+            renderExperienceForm();
+            renderPreviewCanvas();
+        }
+
+        function updateExperienceData(id, field, value) {
+            const e = state.experience.find(e => e.id === id);
+            if (e) { e[field] = value; renderPreviewCanvas(); }
+        }
+
+        function renderExperienceForm() {
+            document.getElementById('experienceFormList').innerHTML = state.experience.map(e => `
+                <div class="p-3 bg-slate-900 border border-slate-800 rounded-xl space-y-2 relative">
+                    <button onclick="removeExperience(${e.id})" class="absolute top-2 right-2 text-rose-400 text-xs"><i class="fa-solid fa-trash"></i></button>
+                    <input type="text" value="${escapeHtml(e.role)}" oninput="updateExperienceData(${e.id}, 'role', this.value)" class="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-slate-200">
+                    <input type="text" value="${escapeHtml(e.org)}" oninput="updateExperienceData(${e.id}, 'org', this.value)" class="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-slate-200">
+                </div>
+            `).join('');
+        }
+
+        function setAccentTheme(hex, glow) {
+            state.theme.accentColor = hex;
+            state.theme.accentGlow = glow;
+            document.documentElement.style.setProperty('--accent-color', hex);
+            document.documentElement.style.setProperty('--accent-glow', glow);
+            renderPreviewCanvas();
+        }
+
+        function setAppStatus(message, isError = false) {
+            const status = document.getElementById('appStatus');
+            status.textContent = message;
+            status.classList.remove('hidden', 'text-emerald-400', 'text-rose-400');
+            status.classList.add(isError ? 'text-rose-400' : 'text-emerald-400');
+        }
+
+        async function savePortfolio() {
+            const button = document.getElementById('savePortfolioBtn');
+            button.disabled = true;
+            try {
+                setAppStatus('Saving portfolio...');
+                const response = await fetch('/api/portfolio/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(state)
+                });
+                const result = await response.json();
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || 'Portfolio save failed.');
+                }
+                setAppStatus(result.message || 'Portfolio saved.');
+            } catch (error) {
+                setAppStatus(error.message || 'Portfolio save failed.', true);
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        function renderPreviewCanvas() {
+            document.getElementById('viewFullName').innerText = state.fullName;
+            document.getElementById('footerName').innerText = state.fullName;
+            document.getElementById('viewTitleBadge').innerText = state.jobTitle;
+            document.getElementById('viewBio').innerText = state.bio;
+            document.getElementById('viewLocation').innerText = state.location;
+            document.getElementById('viewPhoto').src = state.photoUrl;
+
+            document.getElementById('viewSkills').innerHTML = state.skills.map(s => `
+                <span class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 text-xs font-semibold">${escapeHtml(s)}</span>
+            `).join('');
+
+            document.getElementById('viewProjects').innerHTML = state.projects.map(p => `
+                <div class="glass-card rounded-2xl p-5 space-y-2">
+                    <h3 class="font-bold text-white text-base">${escapeHtml(p.title)}</h3>
+                    <p class="text-xs text-slate-300">${escapeHtml(p.desc)}</p>
+                </div>
+            `).join('');
+
+            document.getElementById('viewExperience').innerHTML = state.experience.map(e => `
+                <div class="space-y-1">
+                    <h3 class="font-bold text-sm text-white">${escapeHtml(e.role)} - <span class="accent-text">${escapeHtml(e.org)}</span></h3>
+                    <p class="text-xs text-slate-400">${escapeHtml(e.highlights)}</p>
+                </div>
+            `).join('');
+        }
+
+        function renderAll() {
+            renderSkillsForm();
+            renderProjectsForm();
+            renderExperienceForm();
+            renderPreviewCanvas();
+        }
+
+        function switchFormTab(tabName) {
+            document.querySelectorAll('.form-section').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`form-section-${tabName}`).classList.remove('hidden');
+        }
+
+        function toggleFullscreenPreview() {
+            if (!document.fullscreenElement) {
+                document.getElementById('portfolioCanvas').requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        function openExportModal() {
+            document.getElementById('exportedCodeText').value = generateCleanHTML();
+            document.getElementById('exportModal').classList.remove('hidden');
+        }
+
+        function closeExportModal() {
+            document.getElementById('exportModal').classList.add('hidden');
+        }
+
+        function copyExportedCode() {
+            const textarea = document.getElementById('exportedCodeText');
+            textarea.select();
+            document.execCommand('copy');
+            alert('Code copied to clipboard!');
+        }
+
+        function downloadPortfolioHTML() {
+            const htmlContent = generateCleanHTML();
+            const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${(state.fullName || 'portfolio').toLowerCase().replace(/\s+/g, '_')}_portfolio.html`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function generateCleanHTML() {
+            return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${escapeHtml(state.fullName)} - Portfolio</title>
+    <script src="https://cdn.tailwindcss.com"><\/script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --accent-color: ${state.theme.accentColor}; }
+        body { background-color: #090d16; color: #f1f5f9; font-family: sans-serif; }
+        .glass-card { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .accent-text { color: var(--accent-color); }
+        .accent-bg { background-color: var(--accent-color); }
+    </style>
+</head>
+<body class="min-h-screen py-10 px-4">
+    <div class="max-w-4xl mx-auto space-y-10">
+        ${document.getElementById('portfolioCanvas').innerHTML}
+    </div>
+</body>
+</html>`;
+        }
+
+        function escapeHtml(str) {
+            return str ? str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m])) : '';
+        }
+    </script>
+</body>
+</html>
